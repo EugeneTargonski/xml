@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -15,9 +16,18 @@ namespace XmlGetValue
 
         static void Main(string[] args)
         {
-            nodeName = args[0];
-            paramName = args[1];
+            try
+            {
+                nodeName = args[0];
+                paramName = args[1];
+            }
+            catch 
+            {
+                throw new ArgumentException("You need 2 parameters. 1st is Node Name, 2nd is Node Parameter Name");
+            }
+            
             var fileNames = Directory.EnumerateFiles(@".\", "*.xml").Select(Path.GetFileName);
+            
             foreach (var fileName in fileNames)
             {
                 ProcessDocument(fileName);
