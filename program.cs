@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Xml;
 
 namespace XmlGetValue
@@ -7,42 +8,49 @@ namespace XmlGetValue
     class Program
     {
         public const string ext = ".out";
-
-        public static string fileName;
         public static string nodeName;
         public static string paramName;
         
         public static List<string> output = new List<string>();
 
-        static void SearchNodes(XmlNode xmlRoot)
-        {
-            foreach (XmlNode node in xmlRoot)
-            {
-                if (node.Name == nodeName) 
-                    output.Add(node.Attributes?.GetNamedItem(paramName)?.Value??"");
-                SearchNodes(node);
-            }
-        }
         static void Main(string[] args)
         {
             nodeName = args[0];
             paramName = args[1];
-            fileName = args[2];
-
-            XmlDocument xDoc = new XmlDocument();
-            xDoc.Load(fileName);
-            XmlElement xmlDocument = xDoc.DocumentElement;
-            SearchNodes(xmlDocument);
-
-            if (output.Count == 0) return;
-            SaveOutput();
+            var fileNames = Directory.EnumerateFiles(@".\", "*.xml").Select(Path.GetFileName);
+            foreach (var fileName in fileNames)
+            {
+                ProcessDocument(fileName);
+            }
         }
 
-        private static void SaveOutput()
+        private static void ProcessDocument(string fileName)
         {
-            using StreamWriter sw = new StreamWriter(fileName + ext, false);
-            foreach (var line in output)
-                sw.WriteLine(line);
+            XmlDocument xDoc = new XmlDocument();
+            xDoc.Load(fileName);
+            XmlElement xmlRoot = xDoc.DocumentElement;
+            SearchNodes(xmlRoot);
+            if (output.Count == 0) return;
+            SaveOutput(fileName);
+        }
+
+        static void SearchNodes(XmlNode xmlRoot)
+        {
+            foreach (XmlNode node in xmlRoot)
+            {
+                if (node.Name == nodeName)
+                    output.Add(node.Attributes?.GetNamedItem(paramName)?.Value ?? "");
+                SearchNodes(node);
+            }
+        }
+
+        private static void SaveOutput(string fileName)
+        {
+            using(StreamWriter sw = new StreamWriter(fileName + ext, false))
+            {
+                foreach (var line in output)
+                    sw.WriteLine(line);
+            }
         }
     }
 }
